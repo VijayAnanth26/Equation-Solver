@@ -21,19 +21,15 @@ public class EquationServiceImpl implements EquationService {
     
     @Override
     public String storeEquation(String equationStr) {
-        // Validate equation
         if (equationStr == null || equationStr.trim().isEmpty()) {
             throw new IllegalArgumentException("Equation cannot be empty");
         }
         
         try {
-            // Parse equation and build expression tree
             ExpressionTree expressionTree = EquationParser.parseEquation(equationStr);
             
-            // Generate unique ID
             String equationId = String.valueOf(idGenerator.getAndIncrement());
             
-            // Store equation
             Equation equation = new Equation(equationId, equationStr, expressionTree);
             equationsMap.put(equationId, equation);
             
@@ -61,7 +57,6 @@ public class EquationServiceImpl implements EquationService {
     public double evaluateEquation(String equationId, Map<String, Double> variables) {
         Equation equation = getEquationById(equationId);
         
-        // Evaluate expression tree
         return equation.getExpressionTree().evaluate(variables);
     }
 } 

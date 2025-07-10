@@ -12,10 +12,28 @@ This application provides a RESTful API for managing algebraic equations:
 
 ## Technical Implementation
 
-- **Expression Tree**: Implements a postfix (expression) tree where operators are parent nodes and operands are child nodes.
-- **Equation Parsing**: Converts infix notation to postfix notation and builds an expression tree.
-- **In-Memory Storage**: Stores equations in an in-memory map with unique IDs.
-- **REST API**: JSON-based RESTful endpoints for equation operations.
+### Expression Tree (Postfix Tree)
+The application uses a postfix expression tree to represent and evaluate algebraic equations:
+
+- **Tree Structure**: Each operator node has two children (operands), and leaf nodes represent variables or constants.
+- **Parsing Process**:
+  1. Convert infix equation (e.g., "3x + 2y") to postfix notation (e.g., "3x 2y +")
+  2. Build the expression tree by processing the postfix notation
+  3. Operators become parent nodes, operands become child nodes
+
+### Equation Parsing
+- **Tokenization**: Breaks the equation into tokens (numbers, variables, operators)
+- **Infix to Postfix**: Uses the Shunting Yard algorithm to convert infix to postfix notation
+- **Validation**: Performs syntax validation including:
+  - Balanced parentheses
+  - Valid characters
+  - Proper operator usage
+  - No empty expressions
+
+### Storage and Evaluation
+- **In-Memory Storage**: Stores equations in an in-memory map with unique IDs
+- **Evaluation**: Traverses the expression tree, substituting variables with their values
+- **Variable Handling**: Supports variables and coefficients (e.g., "3x" is recognized as "3 * x")
 
 ## API Endpoints
 
@@ -95,55 +113,69 @@ This application provides a RESTful API for managing algebraic equations:
 ### Build and Run
 
 1. Clone the repository
-2. Build the project:
+2. Navigate to the project directory
+3. Build the project:
 ```bash
 mvn clean install
 ```
-3. Run the application:
+4. Run the application:
 ```bash
 mvn spring-boot:run
 ```
 
 The application will start on `http://localhost:8080`
 
-## Testing
+## Testing with Postman
 
-### Unit Tests
+You can test the API endpoints using Postman:
 
-Run the unit tests with:
-```bash
-mvn test
-```
+1. **Store an Equation**:
+   - Method: POST
+   - URL: `http://localhost:8080/api/equations/store`
+   - Headers: `Content-Type: application/json`
+   - Body:
+     ```json
+     {
+       "equation": "3x + 2y - z"
+     }
+     ```
 
-### Testing with Postman
+2. **Get All Equations**:
+   - Method: GET
+   - URL: `http://localhost:8080/api/equations`
 
-1. Import the provided Postman collection (if available)
-2. Or create new requests to test the API endpoints
-
-Example Postman requests:
-
-1. Store an equation:
-   - POST `http://localhost:8080/api/equations/store`
-   - Body: `{ "equation": "3x + 2y - z" }`
-
-2. Get all equations:
-   - GET `http://localhost:8080/api/equations`
-
-3. Evaluate an equation:
-   - POST `http://localhost:8080/api/equations/1/evaluate`
-   - Body: `{ "variables": { "x": 2, "y": 3, "z": 1 } }`
+3. **Evaluate an Equation**:
+   - Method: POST
+   - URL: `http://localhost:8080/api/equations/1/evaluate`
+   - Headers: `Content-Type: application/json`
+   - Body:
+     ```json
+     {
+       "variables": {
+         "x": 2,
+         "y": 3,
+         "z": 1
+       }
+     }
+     ```
 
 ## Error Handling
 
 The application provides appropriate error responses for:
-- Invalid equation syntax
-- Missing variables during evaluation
-- Division by zero
-- Non-existent equation IDs
+- **Invalid equation syntax**: Unbalanced parentheses, invalid characters, etc.
+- **Missing variables**: When required variables are not provided during evaluation
+- **Division by zero**: When evaluation would result in division by zero
+- **Non-existent equation IDs**: When trying to access an equation that doesn't exist
+
+Error responses follow a consistent format:
+```json
+{
+  "error": "Error message describing the issue"
+}
+```
 
 ## Design Patterns Used
 
-- **Factory Pattern**: For creating expression trees
-- **Strategy Pattern**: For evaluating different types of operations
 - **MVC Pattern**: Separation of concerns with Controllers, Services, and Models
-- **DTO Pattern**: For request/response data transfer 
+- **DTO Pattern**: For request/response data transfer
+- **Singleton Pattern**: For managing the equation storage 

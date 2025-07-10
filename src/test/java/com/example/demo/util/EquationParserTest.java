@@ -25,11 +25,10 @@ public class EquationParserTest {
     public void testInfixToPostfix_ComplexExpression() {
         List<String> postfix = EquationParser.infixToPostfix("3 * x + 2 * y - z");
         assertEquals(9, postfix.size());
-        // Check the operators in the correct positions
-        assertEquals("*", postfix.get(2)); // 3 * x
-        assertEquals("*", postfix.get(5)); // 2 * y
-        assertEquals("+", postfix.get(6)); // (3*x) + (2*y)
-        assertEquals("-", postfix.get(8)); // ((3*x)+(2*y)) - z
+        assertEquals("*", postfix.get(2));
+        assertEquals("*", postfix.get(5));
+        assertEquals("+", postfix.get(6));
+        assertEquals("-", postfix.get(8));
     }
     
     @Test
@@ -127,5 +126,57 @@ public class EquationParserTest {
         
         double result = tree.evaluate(variables);
         assertEquals(12.0, result, 0.001);
+    }
+    
+    @Test
+    public void testParseEquation_EmptyEquation() {
+        assertThrows(IllegalArgumentException.class, () -> EquationParser.parseEquation(""));
+    }
+    
+    @Test
+    public void testParseEquation_UnbalancedParentheses() {
+        assertThrows(IllegalArgumentException.class, () -> EquationParser.parseEquation("(x + y"));
+        assertThrows(IllegalArgumentException.class, () -> EquationParser.parseEquation("x + y)"));
+    }
+    
+    @Test
+    public void testParseEquation_InvalidCharacters() {
+        assertThrows(IllegalArgumentException.class, () -> EquationParser.parseEquation("x $ y"));
+    }
+    
+    @Test
+    public void testParseEquation_ConsecutiveOperators() {
+        assertThrows(IllegalArgumentException.class, () -> EquationParser.parseEquation("x ++ y"));
+    }
+    
+    @Test
+    public void testParseEquation_EmptyParentheses() {
+        assertThrows(IllegalArgumentException.class, () -> EquationParser.parseEquation("x + ()"));
+    }
+    
+    @Test
+    public void testEvaluateExpression_ComplexNestedParentheses() {
+        ExpressionTree tree = EquationParser.parseEquation("((x + y) * z) / (a - b)");
+        Map<String, Double> variables = new HashMap<>();
+        variables.put("x", 2.0);
+        variables.put("y", 3.0);
+        variables.put("z", 4.0);
+        variables.put("a", 7.0);
+        variables.put("b", 2.0);
+        
+        double result = tree.evaluate(variables);
+        assertEquals(4.0, result, 0.001);
+    }
+    
+    @Test
+    public void testEvaluateExpression_ExponentialExpression() {
+        ExpressionTree tree = EquationParser.parseEquation("x^y + z^2");
+        Map<String, Double> variables = new HashMap<>();
+        variables.put("x", 2.0);
+        variables.put("y", 3.0);
+        variables.put("z", 4.0);
+        
+        double result = tree.evaluate(variables);
+        assertEquals(24.0, result, 0.001);
     }
 } 

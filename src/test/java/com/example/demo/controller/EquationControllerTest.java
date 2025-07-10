@@ -99,4 +99,29 @@ public class EquationControllerTest {
         verify(equationService).getEquationById(equationId);
         verify(equationService).evaluateEquation(equationId, variables);
     }
+    
+    @Test
+    public void testEvaluateEquation_MissingVariables() {
+        String equationId = "1";
+        Map<String, Double> variables = new HashMap<>();
+        variables.put("x", 2.0);
+        // Missing y and z variables
+        
+        EvaluateEquationRequest request = new EvaluateEquationRequest(variables);
+        
+        Equation equation = new Equation(equationId, "3x + 2y - z", new ExpressionTree());
+        
+        when(equationService.getEquationById(equationId)).thenReturn(equation);
+        when(equationService.evaluateEquation(equationId, variables)).thenThrow(new IllegalArgumentException("Variable y not provided"));
+        
+        try {
+            equationController.evaluateEquation(equationId, request);
+            fail("Should have thrown exception");
+        } catch (IllegalArgumentException e) {
+            assertEquals("Variable y not provided", e.getMessage());
+        }
+        
+        verify(equationService).getEquationById(equationId);
+        verify(equationService).evaluateEquation(equationId, variables);
+    }
 } 

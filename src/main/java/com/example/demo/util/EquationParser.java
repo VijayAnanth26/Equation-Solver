@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
 import com.example.demo.model.ExpressionTree;
 import com.example.demo.model.TreeNode;
@@ -24,15 +24,40 @@ public class EquationParser {
     }
     
     public static ExpressionTree parseEquation(String equation) {
-        // Convert infix to postfix
+        if (equation == null || equation.trim().isEmpty()) {
+            throw new IllegalArgumentException("Equation cannot be empty");
+        }
+        
+        validateEquationSyntax(equation);
+        
         List<String> postfix = infixToPostfix(equation);
         
-        // Build expression tree from postfix
         return buildExpressionTree(postfix);
     }
     
+    private static void validateEquationSyntax(String equation) {
+        int openCount = 0;
+        for (char c : equation.toCharArray()) {
+            if (c == '(') openCount++;
+            if (c == ')') openCount--;
+            if (openCount < 0) throw new IllegalArgumentException("Unbalanced parentheses in equation");
+        }
+        if (openCount != 0) throw new IllegalArgumentException("Unbalanced parentheses in equation");
+        
+        if (!Pattern.matches("[\\d\\w\\s\\+\\-\\*\\/\\^\\(\\)]+", equation)) {
+            throw new IllegalArgumentException("Equation contains invalid characters");
+        }
+        
+        if (Pattern.matches(".*[\\+\\-\\*\\/\\^][\\+\\*\\/\\^].*", equation)) {
+            throw new IllegalArgumentException("Invalid consecutive operators in equation");
+        }
+        
+        if (Pattern.matches(".*\\(\\s*\\).*", equation)) {
+            throw new IllegalArgumentException("Empty parentheses in equation");
+        }
+    }
+    
     public static List<String> infixToPostfix(String equation) {
-        // Tokenize the equation
         List<String> tokens = tokenizeEquation(equation);
         
         List<String> postfix = new ArrayList<>();
@@ -48,9 +73,9 @@ public class EquationParser {
                     postfix.add(operators.pop());
                 }
                 if (!operators.isEmpty() && operators.peek().equals("(")) {
-                    operators.pop(); // Discard the "("
+                    operators.pop();
                 }
-            } else { // Operator
+            } else {
                 while (!operators.isEmpty() && 
                        PRECEDENCE.getOrDefault(operators.peek(), 0) >= PRECEDENCE.getOrDefault(token, 0)) {
                     postfix.add(operators.pop());
@@ -59,7 +84,6 @@ public class EquationParser {
             }
         }
         
-        // Pop remaining operators
         while (!operators.isEmpty()) {
             postfix.add(operators.pop());
         }
@@ -83,20 +107,16 @@ public class EquationParser {
             }
             
             if (c == '(' || c == ')' || isOperator(String.valueOf(c))) {
-                // Add current token if exists
                 if (currentToken.length() > 0) {
                     tokens.add(currentToken.toString());
                     currentToken = new StringBuilder();
                 }
-                // Add operator or parenthesis
                 tokens.add(String.valueOf(c));
             } else {
-                // Part of a number, variable, or coefficient
                 currentToken.append(c);
             }
         }
         
-        // Add last token if exists
         if (currentToken.length() > 0) {
             tokens.add(currentToken.toString());
         }
@@ -114,33 +134,37 @@ public class EquationParser {
     }
     
     public static ExpressionTree buildExpressionTree(List<String> postfix) {
+        if (postfix.isEmpty()) {
+            throw new IllegalArgumentException("Empty postfix expression");
+        }
+        
         Stack<TreeNode> stack = new Stack<>();
         
         for (String token : postfix) {
             if (isOperator(token)) {
-                // Pop two operands
+                if (stack.size() < 2) {
+                    throw new IllegalArgumentException("Invalid expression: insufficient operands for operator " + token);
+                }
+                
                 TreeNode right = stack.pop();
                 TreeNode left = stack.pop();
                 
-                // Create operator node
                 TreeNode operator = new TreeNode(token);
                 operator.setLeft(left);
                 operator.setRight(right);
                 
-                // Push back to stack
                 stack.push(operator);
             } else {
-                // Push operand to stack
                 stack.push(new TreeNode(token));
             }
         }
         
-        // The final node in the stack is the root of the expression tree
         ExpressionTree tree = new ExpressionTree();
-        if (!stack.isEmpty()) {
-            tree.setRoot(stack.pop());
+        if (stack.size() != 1) {
+            throw new IllegalArgumentException("Invalid expression: too many operands");
         }
         
+        tree.setRoot(stack.pop());
         return tree;
     }
     

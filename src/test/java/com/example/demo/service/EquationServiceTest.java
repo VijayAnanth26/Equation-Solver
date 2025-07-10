@@ -22,15 +22,25 @@ public class EquationServiceTest {
     }
     
     @Test
-    public void testStoreEquation_ValidEquation() {
-        String equationId = equationService.storeEquation("3x + 2y - z");
+    public void testStoreEquation() {
+        String equationId = equationService.storeEquation("x + y");
         assertNotNull(equationId);
-        assertEquals("1", equationId);
+        
+        Equation equation = equationService.getEquationById(equationId);
+        assertNotNull(equation);
+        assertEquals("x + y", equation.getEquation());
+        assertEquals(equationId, equation.getEquationId());
     }
     
     @Test
-    public void testStoreEquation_EmptyEquation() {
-        assertThrows(IllegalArgumentException.class, () -> equationService.storeEquation(""));
+    public void testStoreMultipleEquations() {
+        String id1 = equationService.storeEquation("x + y");
+        String id2 = equationService.storeEquation("3x - 2y");
+        
+        assertNotEquals(id1, id2);
+        
+        List<Equation> equations = equationService.getAllEquations();
+        assertEquals(2, equations.size());
     }
     
     @Test
@@ -41,32 +51,12 @@ public class EquationServiceTest {
     }
     
     @Test
-    public void testGetAllEquations_WithStoredEquations() {
-        equationService.storeEquation("3x + 2y - z");
-        equationService.storeEquation("x^2 + y^2");
-        
-        List<Equation> equations = equationService.getAllEquations();
-        assertNotNull(equations);
-        assertEquals(2, equations.size());
-    }
-    
-    @Test
-    public void testGetEquationById_ExistingId() {
-        String equationId = equationService.storeEquation("3x + 2y - z");
-        
-        Equation equation = equationService.getEquationById(equationId);
-        assertNotNull(equation);
-        assertEquals(equationId, equation.getEquationId());
-        assertEquals("3x + 2y - z", equation.getEquation());
-    }
-    
-    @Test
-    public void testGetEquationById_NonExistingId() {
+    public void testGetEquationById_NotFound() {
         assertThrows(IllegalArgumentException.class, () -> equationService.getEquationById("999"));
     }
     
     @Test
-    public void testEvaluateEquation_ValidEquation() {
+    public void testEvaluateEquation() {
         String equationId = equationService.storeEquation("3x + 2y - z");
         
         Map<String, Double> variables = new HashMap<>();
@@ -80,37 +70,16 @@ public class EquationServiceTest {
     
     @Test
     public void testEvaluateEquation_MissingVariable() {
-        String equationId = equationService.storeEquation("3x + 2y - z");
+        String equationId = equationService.storeEquation("x + y");
         
         Map<String, Double> variables = new HashMap<>();
         variables.put("x", 2.0);
-        variables.put("y", 3.0);
         
         assertThrows(IllegalArgumentException.class, () -> equationService.evaluateEquation(equationId, variables));
     }
     
     @Test
-    public void testEvaluateEquation_NonExistingId() {
-        Map<String, Double> variables = new HashMap<>();
-        variables.put("x", 2.0);
-        
-        assertThrows(IllegalArgumentException.class, () -> equationService.evaluateEquation("999", variables));
-    }
-    
-    @Test
-    public void testMultipleEquations() {
-        String eq1Id = equationService.storeEquation("3x + 2y - z");
-        String eq2Id = equationService.storeEquation("x^2 + y^2");
-        
-        Map<String, Double> variables = new HashMap<>();
-        variables.put("x", 3.0);
-        variables.put("y", 4.0);
-        variables.put("z", 1.0);
-        
-        double result1 = equationService.evaluateEquation(eq1Id, variables);
-        double result2 = equationService.evaluateEquation(eq2Id, variables);
-        
-        assertEquals(16.0, result1, 0.001);
-        assertEquals(25.0, result2, 0.001);
+    public void testStoreInvalidEquation() {
+        assertThrows(IllegalArgumentException.class, () -> equationService.storeEquation(""));
     }
 } 

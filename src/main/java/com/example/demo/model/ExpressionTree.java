@@ -1,7 +1,6 @@
 package com.example.demo.model;
 
 import java.util.Map;
-import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.Data;
@@ -26,7 +25,6 @@ public class ExpressionTree {
             return 0;
         }
 
-        // If leaf node (operand)
         if (node.left == null && node.right == null) {
             if (node.isVariable()) {
                 String varName = node.getValue();
@@ -35,18 +33,15 @@ public class ExpressionTree {
                 }
                 return variables.get(varName);
             } else if (isCoefficient(node.getValue())) {
-                // Handle coefficients like "3x"
                 return evaluateCoefficient(node.getValue(), variables);
             } else {
                 return Double.parseDouble(node.getValue());
             }
         }
 
-        // Evaluate left and right subtrees
         double leftValue = evaluateNode(node.left, variables);
         double rightValue = evaluateNode(node.right, variables);
 
-        // Apply operator
         switch (node.getValue()) {
             case "+": return leftValue + rightValue;
             case "-": return leftValue - rightValue;
@@ -62,7 +57,6 @@ public class ExpressionTree {
     }
     
     private boolean isCoefficient(String token) {
-        // Check if the token is a coefficient like "3x"
         return token.matches("\\d+[a-zA-Z]+");
     }
     
@@ -100,15 +94,53 @@ public class ExpressionTree {
             return node.getValue();
         }
 
+        String leftStr = toInfixNotation(node.left);
+        String rightStr = toInfixNotation(node.right);
+        
+        // Determine if parentheses are needed based on operator precedence
+        boolean needLeftParentheses = node.left != null && node.left.isOperator() && 
+                                     hasLowerPrecedence(node.left.getValue(), node.getValue());
+        boolean needRightParentheses = node.right != null && node.right.isOperator() && 
+                                      (hasLowerPrecedence(node.right.getValue(), node.getValue()) || 
+                                       (node.getValue().equals("-") || node.getValue().equals("/")));
+        
         StringBuilder sb = new StringBuilder();
         
-        // Add parentheses for clarity
-        sb.append("(");
-        sb.append(toInfixNotation(node.left));
+        if (needLeftParentheses) {
+            sb.append("(").append(leftStr).append(")");
+        } else {
+            sb.append(leftStr);
+        }
+        
         sb.append(" ").append(node.getValue()).append(" ");
-        sb.append(toInfixNotation(node.right));
-        sb.append(")");
+        
+        if (needRightParentheses) {
+            sb.append("(").append(rightStr).append(")");
+        } else {
+            sb.append(rightStr);
+        }
         
         return sb.toString();
+    }
+    
+    private boolean hasLowerPrecedence(String op1, String op2) {
+        int prec1 = getOperatorPrecedence(op1);
+        int prec2 = getOperatorPrecedence(op2);
+        return prec1 < prec2;
+    }
+    
+    private int getOperatorPrecedence(String op) {
+        switch (op) {
+            case "+":
+            case "-":
+                return 1;
+            case "*":
+            case "/":
+                return 2;
+            case "^":
+                return 3;
+            default:
+                return 0;
+        }
     }
 } 

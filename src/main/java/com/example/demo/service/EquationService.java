@@ -6,7 +6,7 @@ import java.util.Map;
 import com.example.demo.model.Equation;
 
 public interface EquationService {
-    String storeEquation(String equationStr);
+    String storeEquation(String equation);
     List<Equation> getAllEquations();
     Equation getEquationById(String equationId);
     double evaluateEquation(String equationId, Map<String, Double> variables);
